@@ -1,0 +1,199 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    position: relative;
+    padding-bottom: 100px;
+}
+
+.header {
+    background: linear-gradient(90deg, #FE6062 0%, #FD8669 100%);
+    padding: 0 16px;
+    width: 100%;
+    color: white;
+}
+
+.header-row {
+    margin-top: 35px;
+    display: flex;
+    justify-content: space-between;
+    line-height: 31px;
+}
+
+.back-button {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.storeName {
+    display: inline-block;
+    width: 230px; /*  根据需要调整，确保能容纳省略号 + 4 个字符 */
+    white-space: nowrap;
+    text-overflow: clip; /* 禁用 CSS 省略号 */
+}
+
+.date {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    height: 31px;
+    background: #C65D64;
+    border-radius: 8px;
+}
+
+.header-center {
+    text-align: center;
+}
+
+.header-right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.date {
+    max-width: 100%; /* 最大宽度为父容器的宽度 */
+    white-space: nowrap; /* 强制文本不换行 */
+    overflow: hidden; /* 超出部分隐藏 */
+    text-overflow: ellipsis; /* 超出部分显示省略号 */
+}
+
+.dataBox {
+    position: relative;
+}
+
+.statistics {
+    position: relative;
+    margin: 16px;
+    border-radius: 10%;
+    /*box-shadow: 0px 0px 5px 0px rgba(219, 219, 219, 0.75);*/
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+
+}
+
+:deep(.van-tabs) {
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.van-tabs__nav--line {
+    border-radius: 8px;
+}
+
+.van-tabs--card > .van-tabs__wrap > .van-tabs__nav--card {
+    margin: 0;
+}
+
+/*.tablist{*/
+/*    margin: 0;*/
+/*}*/
+.statistics-background {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(90deg, #FE6062 0%, #FD8669 100%);
+
+}
+.statistics-background::after {
+    content: '';
+    position: absolute;
+    bottom: -12px; /* 控制椭圆的高度 */
+    left: 0;
+    right: 0;
+    height: 60px; /* 椭圆的高度 */
+    background: inherit; /* 继承父元素的渐变背景 */
+    border-radius: 0 0 90% 90% ; /* 创建椭圆底部 */
+    transform: scaleX(1.5); /* 水平拉伸使椭圆更宽 */
+}
+.statistics-card {
+    background-color: #fff;
+    padding: 5px 20px 20px 20px;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--el-card-border-color);
+}
+
+
+.stat-item {
+    text-align: left;
+    flex: 1;
+}
+
+.stat-item-left {
+    border-right: solid 1px #ccc;
+}
+
+.stat-item-right {
+    border-right: solid 1px #ccc;
+}
+
+.stat-title {
+    font-size: 1rem;
+    color: #4F4D4E;
+}
+
+.stat-value {
+    margin-top: 16px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #252525;
+}
+
+.stat-change-text {
+    color: #99989D;
+    font-size: 14px;
+}
+
+.stat-change {
+    font-size: 0.9rem;
+    margin-top: 16px;
+}
+
+.stat-change-second {
+    font-size: 0.9rem;
+    margin-top: 4px;
+
+}
+
+.stat-change.positive {
+    color: green;
+}
+
+.stat-change.negative {
+    color: red;
+}
+
+.revenue-structure {
+    position: fixed;
+    bottom: 50px;
+    padding: 10px;
+    background-color: #fff;
+    width: 100%;
+}
+
+.structure-btn {
+    width: 100%;
+    padding: 10px;
+    /*border-radius: 5px;*/
+    font-weight: bold;
+    /*color: #0B0B0B;*/
+}
+
+.structure-item {
+    padding: 5px;
+}
+
+.arr-up {
+    transition: transform 0.3s ease-in-out;
+    transform: rotate(0deg);
+}
+
+.arr-down {
+    transition: transform 0.3s ease-in-out;
+    transform: rotate(180deg);
+}

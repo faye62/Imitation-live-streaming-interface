@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link href="/vite.svg" rel="icon" type="image/svg+xml"/>
+    <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          name="viewport"/>
+    <title>直播</title>
+    <link href="/favicon.ico" rel="icon" type="image/svg+xml"/>
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: "853dda0bf6a586d7feda9eaa57c35749",
+        };
+        AMapLoader.load({
+            key: "a329a623fd4fae34ae5808eeb66f2b38", //申请好的 Web 端开发 Key，首次调用 load 时必填
+            version: "2.0", //指定要加载的 JS API 的版本，缺省时默认为 1.4.15
+            plugins: ['AMap.Geolocation'], //需要使用的的插件列表，如比例尺'AMap.Scale'，支持添加多个如：['AMap.Scale','...','...']
+            AMapUI: {
+                //是否加载 AMapUI，缺省不加载
+                version: "1.1", //AMapUI 版本
+                plugins: ["overlay/SimpleMarker"], //需要加载的 AMapUI ui 插件
+            },
+            Loca: {
+                //是否加载 Loca， 缺省不加载
+                version: "2.0", //Loca 版本
+            },
+        })
+            .then((AMap) => {
+            })
+            .catch((e) => {
+                console.error(e); //加载错误提示
+            });
+    </script>
+</head>
+<body arco-theme="dark">
+<div id="app"></div>
+<script src="/src/main.ts" type="module"></script>
+</body>
+</html>
