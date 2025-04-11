@@ -13,22 +13,20 @@ const scrollbar = ref(true);
         fill="currentColor"></path></svg></i> 返回首页 </span>
       <div class="left-tpinfo" data-v-3806f0bd="">ID&nbsp;&nbsp;922104408</div>
     </div>
-    <div data-v-3806f0bd="" data-v-b6f8296a="">
-      <div class="nothing" data-v-b6f8296a=""></div>
+    <div data-v-3806f0bd="">
+      <div class="nothing"></div>
     </div>
     <div class="page-title flex1" data-v-3806f0bd=""><span
         class="arco-tag arco-tag-size-medium arco-tag-red arco-tag-bordered arco-tag-checked live-status"><!--v-if-->已结束
       <!--v-if--><!--v-if--></span><span class="title-name" data-v-3806f0bd="">4.9团团优品【中午线】直播</span></div>
     <div class="func-btn d-flex aligni-center" data-v-3806f0bd="">
-      <a-select :default-value="['Beijing','Shanghai']" :scrollbar="scrollbar" :style="{width:'360px'}"
+      <a-select :default-value="['商品订单','分销订单']" :scrollbar="scrollbar" :style="{width:'230px'}"
                 multiple
                 placeholder="Please select ...">
-        <a-option>Beijing</a-option>
-        <a-option :tag-props="{color:'red'}">Shanghai</a-option>
-        <a-option>Guangzhou</a-option>
-        <a-option disabled>Disabled</a-option>
-        <a-option>Shenzhen</a-option>
-        <a-option>Wuhan</a-option>
+        <a-option>全部</a-option>
+        <a-option>内容订单</a-option>
+        <a-option>商品订单</a-option>
+        <a-option>分销订单</a-option>
       </a-select>
       <div class="vzicon unselectable vzicon_refresh" data-v-3806f0bd="" data-v-ae23498c="" draggable="false"
            style="width: 24px; height: 24px; --0234b6ab: 0.6;"><img alt="refresh" data-v-ae23498c=""

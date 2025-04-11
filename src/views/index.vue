@@ -11,45 +11,170 @@
         <!-- 右侧上部分 -->
         <div style="display: flex;">
           <!-- 中间数据统计区域 -->
-          <div class="stats-container">
-            <div class="room-id">ID：092104498</div>
-            <div class="stats-numbers">
-              <div class="stat-item">
-                <div class="stat-label">评论次数</div>
-                <div class="stat-value">2148</div>
+          <!-- 数据展示区域 -->
+          <div class="ob-box p20 shop">
+            <div class="f">
+              <div class="f1">
+                <div class="ob-box-name f fc">
+                  {{ dataMode === 'ecommerce' ? '下单 GMV' : '当前观看人数' }}
+                  <i class="el-icon ml6 cp el-tooltip__trigger el-tooltip__trigger">
+                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                          d="M784.512 230.272v-50.56a32 32 0 1 1 64 0v149.056a32 32 0 0 1-32 32H667.52a32 32 0 1 1 0-64h92.992A320 320 0 1 0 524.8 833.152a320 320 0 0 0 320-320h64a384 384 0 0 1-384 384 384 384 0 0 1-384-384 384 384 0 0 1 643.712-282.88z"
+                          fill="currentColor"></path>
+                    </svg>
+                  </i>
+                </div>
+                <div class="ob-box-online peple">
+                  {{ dataMode === 'ecommerce' ? dynamicData.ecommerce.gmv.toFixed(1) : dynamicData.general.viewers }}
+                </div>
               </div>
-              <div class="stat-item">
-                <div class="stat-label">评论人数</div>
-                <div class="stat-value">473</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">互动率</div>
-                <div class="stat-value">34%</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">总曝光</div>
-                <div class="stat-value">4981</div>
-              </div>
-            </div>
-            <div class="time-stats">
-              <div class="stat-item">
-                <div class="stat-label">直播时长</div>
-                <div class="stat-value">01:16:21</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">打赏次数</div>
-                <div class="stat-value">0</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">打赏人数</div>
-                <div class="stat-value">0</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">观看人数</div>
-                <div class="stat-value">0</div>
+              <div>
+                <div class="f fc">
+        <span class="arco-radio-group-button arco-radio-group-size-medium arco-radio-group-direction-horizontal">
+          <label
+              :class="{ 'arco-radio-checked': dataMode === 'general' }"
+              class="arco-radio-button"
+              @click="dataMode = 'general'"
+          >
+            <input :checked="dataMode === 'general'" class="arco-radio-target" type="radio" value="general">
+            <span class="arco-radio-button-content">通用数据</span>
+          </label>
+          <label
+              :class="{ 'arco-radio-checked': dataMode === 'ecommerce' }"
+              class="arco-radio-button"
+              @click="dataMode = 'ecommerce'"
+          >
+            <input :checked="dataMode === 'ecommerce'" class="arco-radio-target" type="radio" value="ecommerce">
+            <span class="arco-radio-button-content">电商数据</span>
+          </label>
+        </span>
+                </div>
               </div>
             </div>
 
+            <div class="arco-divider arco-divider-horizontal" role="separator"></div>
+
+            <div class="arco-row arco-row-align-start arco-row-justify-start data-item"
+                 style="margin-top: -12px; margin-bottom: -12px;">
+              <template v-if="dataMode === 'ecommerce'">
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">销量</div>
+                    <div class="data-value">{{ dynamicData.ecommerce.sales }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">成交人数</div>
+                    <div class="data-value">{{ dynamicData.ecommerce.buyers }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">客单价(元)</div>
+                    <div class="data-value">￥{{ dynamicData.ecommerce.avgPrice.toFixed(1) }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">累计观看人数</div>
+                    <div class="data-value">{{ dynamicData.ecommerce.viewers }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">成交转化率</div>
+                    <div class="data-value">{{ dynamicData.ecommerce.conversion.toFixed(2) }}%</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name" style="white-space: nowrap;">直播成交金额(元)</div>
+                    <div class="data-value">￥{{ dynamicData.ecommerce.liveSales.toFixed(1) }}</div>
+                  </section>
+                </div>
+              </template>
+
+              <template v-else>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">评论次数</div>
+                    <div class="data-value">{{ dynamicData.general.comments }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">评论人数</div>
+                    <div class="data-value">{{ dynamicData.general.commenters }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">互动率</div>
+                    <div class="data-value">{{ dynamicData.general.interactionRate.toFixed(1) }}%</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">点赞数</div>
+                    <div class="data-value">{{ dynamicData.general.likes }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">直播时长</div>
+                    <div class="data-value">{{ dynamicData.general.duration }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">打赏次数</div>
+                    <div class="data-value">{{ dynamicData.general.rewards }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">打赏人数</div>
+                    <div class="data-value">{{ dynamicData.general.rewarders }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">报名人数</div>
+                    <div class="data-value">{{ dynamicData.general.signups }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">签到人数</div>
+                    <div class="data-value">{{ dynamicData.general.checkins }}</div>
+                  </section>
+                </div>
+                <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
+                     style="padding-top: 12px; padding-bottom: 12px;">
+                  <section class="el-tooltip__trigger">
+                    <div class="data-name">发送红包金额(元)</div>
+                    <div class="data-value">￥{{ dynamicData.general.redpacket }}</div>
+                  </section>
+                </div>
+              </template>
+            </div>
           </div>
           <div class="chart-area">
             <div class="chart-tabs">
@@ -61,28 +186,7 @@
           </div>
         </div>
         <!-- 右侧下部分聊天记录区域 -->
-        <div class="chat-area">
-          <div class="chat-header">
-            <div class="tab active">聊天记录</div>
-            <div class="tab">商品列表</div>
-          </div>
-          <div class="chat-messages">
-            <div v-for="(message, index) in messages" :key="index" class="message">
-              <div class="avatar"></div>
-              <div class="message-content">
-                <div class="user-info">
-                  <span class="user-name">{{ message.username }}</span>
-                  <span class="time">{{ message.time }}</span>
-                </div>
-                <div class="message-text">{{ message.content }}</div>
-              </div>
-              <div class="message-actions">
-                <span @click="handleReply(message)">回复</span>
-                <span @click="handleBan(message)">禁言</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <char-area></char-area>
       </div>
     </div>
   </div>
@@ -93,48 +197,84 @@ import {onMounted, onUnmounted, ref} from 'vue';
 import * as echarts from 'echarts';
 import PageHead from "@/views/page-head.vue";
 import LiveChatContainer from "@/views/live-chat-container.vue";
+import CharArea from "@/views/char-area.vue";
+
 
 const active = ref('customer');
 const chartRef = ref(null);
 let chart = null;
-const chatInput = ref('');
-const chatMessages = ref([
-  {username: '用户1', content: '主播好'},
-  {username: '用户2', content: '画面很清晰'},
-  {username: '用户3', content: '主播讲解的很详细'},
-]);
 
-const sendMessage = () => {
-  if (chatInput.value.trim()) {
-    chatMessages.value.push({
-      username: '我',
-      content: chatInput.value
-    });
-    chatInput.value = '';
-  }
-};
+// 数据模式状态
+const dataMode = ref('ecommerce') // 'general' 或 'ecommerce'
 
-// 模拟消息数据
-const messages = ref([
-  {
-    username: '6M@2-11111',
-    content: '欢迎光临',
-    time: '2024-04-19 11:41:32',
-    avatar: ''
+// 模拟动态数据
+const dynamicData = ref({
+  ecommerce: {
+    gmv: 7175.4,
+    sales: 47,
+    buyers: 31,
+    avgPrice: 124.0,
+    viewers: 1337,
+    conversion: 2.31,
+    liveSales: 5827.8
   },
-  {
-    username: '潘军军',
-    content: '欢迎光临',
-    time: '2024-04-19 10:47:14',
-    avatar: ''
-  },
-  {
-    username: '张明明',
-    content: '电力',
-    time: '2024-04-19 10:34:47',
-    avatar: ''
+  general: {
+    viewers: 0,
+    comments: 0,
+    commenters: 0,
+    interactionRate: 0,
+    likes: 0,
+    duration: '00:00:00',
+    rewards: 0,
+    rewarders: 0,
+    signups: 0,
+    checkins: 0,
+    redpacket: 0
   }
-]);
+})
+
+// 更新时间函数
+const updateTime = () => {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  dynamicData.value.general.duration = `${hours}:${minutes}:${seconds}`
+}
+
+// 模拟数据更新
+const updateData = () => {
+  // 随机增量
+  const randomIncrement = (base, max) => base + Math.floor(Math.random() * max)
+
+  // 更新电商数据
+  dynamicData.value.ecommerce = {
+    gmv: randomIncrement(7000, 500),
+    sales: randomIncrement(45, 10),
+    buyers: randomIncrement(30, 5),
+    avgPrice: 120 + Math.random() * 10,
+    viewers: randomIncrement(1300, 50),
+    conversion: 2.0 + Math.random(),
+    liveSales: randomIncrement(5800, 300)
+  }
+
+  // 更新通用数据
+  dynamicData.value.general = {
+    viewers: randomIncrement(500, 100),
+    comments: randomIncrement(80, 20),
+    commenters: randomIncrement(40, 10),
+    interactionRate: 5 + Math.random() * 3,
+    likes: randomIncrement(500, 200),
+    duration: dynamicData.value.general.duration,
+    rewards: randomIncrement(10, 5),
+    rewarders: randomIncrement(8, 3),
+    signups: randomIncrement(20, 5),
+    checkins: randomIncrement(15, 5),
+    redpacket: randomIncrement(100, 50)
+  }
+
+  updateTime()
+}
 
 // 初始化图表
 const initChart = () => {
@@ -210,18 +350,6 @@ const initChart = () => {
   chart.setOption(option);
 };
 
-// 处理消息操作
-const handleReply = (message) => {
-  console.log('回复消息:', message);
-};
-
-const handleBan = (message) => {
-  console.log('禁言用户:', message);
-};
-
-const handleDelete = (message) => {
-  console.log('删除消息:', message);
-};
 
 // 监听窗口大小变化
 const handleResize = () => {
@@ -231,6 +359,8 @@ const handleResize = () => {
 onMounted(() => {
   initChart();
   window.addEventListener('resize', handleResize);
+  updateTime()
+  setInterval(updateData, 5000) // 每5秒更新一次数据
 });
 
 onUnmounted(() => {
@@ -255,39 +385,6 @@ onUnmounted(() => {
   padding-left: 8px;
 }
 
-.room-id {
-  color: #8c8c8c;
-  margin-bottom: 10px;
-}
-
-.stats-numbers {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.time-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-label {
-  color: #8c8c8c;
-  font-size: 12px;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-}
-
 .main-content {
   display: flex;
   padding: 0 8px 8px 8px;
@@ -295,151 +392,187 @@ onUnmounted(() => {
   width: 100vw;
 }
 
-.left-sidebar {
-  width: 200px;
-  background-color: #1a1f2c;
-  border-right: 1px solid #2a2f3c;
-  padding: 20px;
-}
-
-.logo-area {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.slogan {
-  font-size: 12px;
-  color: #8c8c8c;
-  margin-top: 10px;
-}
-
-.nav-menu .nav-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-
-.nav-menu .nav-item.active {
-  background-color: #2a2f3c;
-  border-radius: 4px;
-}
-
-.nav-icon {
-  margin-right: 10px;
-}
-
-.stats-container {
-  padding: 20px;
-  border-right: 1px solid #2a2f3c;
-  display: flex;
-  flex-direction: column;
-}
-
 .chart-area {
-  width: 100%;
+  width: 400px;
   display: flex;
   flex-direction: column;
-}
-
-.chat-area {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-header {
-  display: flex;
-  padding: 10px;
-  border-bottom: 1px solid #2a2f3c;
-}
-
-.tab {
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-.tab.active {
-  color: #409EFF;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.message {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #2a2f3c;
-  margin-right: 10px;
-}
-
-.message-content {
-  flex: 1;
-}
-
-.user-name {
-  color: #409EFF;
-  margin-bottom: 5px;
-}
-
-.message-actions {
-  color: #8c8c8c;
-  font-size: 12px;
-}
-
-.message-actions span {
-  margin-left: 10px;
-  cursor: pointer;
 }
 
 .chart-container {
-  height: 300px;
-  background-color: #1a1f2c;
+  width: 999px;
+  height: 260px;
 }
 
-.chart-tabs {
+.ob-box {
+  position: relative;
+  background: linear-gradient(135deg, rgba(77, 192, 228, .3), rgba(65, 79, 110, .3));
+  border: 1px solid;
+  -o-border-image: linear-gradient(180deg, rgba(163, 170, 187, 0), rgba(163, 170, 187, .2), rgba(163, 170, 187, 0)) 1 1;
+  border-image: linear-gradient(180deg, rgba(163, 170, 187, 0), rgba(163, 170, 187, .2), rgba(163, 170, 187, 0)) 1 1;
+  border-radius: 12px 0 0 12px;
+  flex-shrink: 0;
+  width: 480px;
+  height: 345px;
+  overflow: auto;
+  padding: 20px;
+}
+
+.f {
   display: flex;
-  gap: 20px;
-  padding: 10px 20px;
 }
 
-.chart-tabs .tab {
-  color: #8c8c8c;
+.f1 {
+  flex: 1;
+}
+
+.ob-box-name {
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .8);
+  line-height: 22px;
+}
+
+.ml6 {
+  margin-left: 6px;
+}
+
+.cp {
   cursor: pointer;
 }
 
-.chart-tabs .tab.active {
-  color: #409EFF;
+.peple {
+  color: aqua;
+  font-family: PB;
 }
 
-.user-info {
+.ob-box-online {
+  font-family: din;
+  color: #fff;
+  font-weight: bolder;
+  margin-top: 4px;
+  font-size: 28px;
+}
+
+.fc {
+  align-items: center;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+}
+
+.arco-divider-horizontal {
+  position: relative;
+  clear: both;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 20px 0;
+  border-bottom: 1px solid rgb(255, 255, 255, 0.12);
+}
+
+.arco-row-justify-start {
+  justify-content: flex-start;
+}
+
+.arco-row-align-start {
+  align-items: flex-start;
+}
+
+.arco-row {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+@media (min-width: 1600px) {
+  .arco-col-xxl-6 {
+    flex: 0 0 25%;
+    width: 25%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .arco-col-xl-8 {
+    flex: 0 0 33.33333333%;
+    width: 33.33333333%;
+  }
+}
+
+@media (min-width: 992px) {
+  .arco-col-lg-12 {
+    flex: 0 0 50%;
+    width: 50%;
+  }
+}
+
+.arco-col {
+  box-sizing: border-box;
+}
+
+.data-name {
+  font-weight: 400;
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .8);
+  line-height: 22px;
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.time {
-  color: #8c8c8c;
-  font-size: 12px;
+.data-value {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  line-height: 28px;
+  font-family: PB;
 }
 
-.message-actions {
-  display: flex;
-  gap: 15px;
+.peple {
+  color: aqua;
+  font-family: PB;
 }
 
-.message-actions span:hover {
-  color: #409EFF;
+.arco-radio-group-button {
+  background-color: #060d1b;
+  border-radius: 10px;
+}
+
+.arco-radio-button, .arco-radio-group-button {
+  line-height: 26px;
+  border-radius: 10px;
+}
+
+.arco-radio-group-button {
+  display: inline-flex;
+  padding: 1.5px;
+}
+
+.arco-radio-group-button .arco-radio-button {
+  line-height: 36px;
+}
+
+.arco-radio-button {
+  position: relative;
+  display: inline-block;
+  margin: 1.5px;
+  color: hsla(0, 0%, 100%, .7);
+  font-size: 14px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all .1s linear;
+}
+
+
+.arco-radio-button-content {
+  color: hsla(0, 0%, 100%, .6);
+  padding: 0 10px;
+}
+
+.arco-radio-button-content {
+  position: relative;
+  display: block;
+  padding: 0 12px;
+}
+
+.arco-radio-checked .arco-radio-button-content {
+  color: #fff !important;
+  background: rgba(65, 79, 110, .6);
+  border-radius: 8px;
 }
 </style>
