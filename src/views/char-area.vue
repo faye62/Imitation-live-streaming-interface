@@ -88,7 +88,7 @@ const handleScroll = () => {
   if (containerRef.value) {
     const {scrollTop, scrollHeight, clientHeight} = containerRef.value
     const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50
-
+    let lastScrollTop
     if (isNearBottom) {
       isUserScrolling = false
     } else if (scrollTop < lastScrollTop) {

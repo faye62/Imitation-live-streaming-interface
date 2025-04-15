@@ -360,6 +360,7 @@
 import {onMounted, onUnmounted, ref} from 'vue';
 import * as echarts from 'echarts';
 import PageHead from "@/views/page-head.vue";
+import charArea from "@/views/char-area.vue";
 import LiveChatContainer from "@/views/live-chat-container.vue";
 import {IconClose} from '@arco-design/web-vue/es/icon';
 
