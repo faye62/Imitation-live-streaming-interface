@@ -1,7 +1,27 @@
 <script setup>
+import {ref, watch} from 'vue'
 import avitor from "../assets/touf.jpeg";
 
+
+const props = defineProps({
+  title: {
+    type: String,
+    default: '默认标题'
+  },
+  isLive: { // 接收直播状态
+    type: Boolean,
+    default: false
+  }
+})
 const scrollbar = ref(true);
+const LiveStreamingName = ref('直播标题')
+watch(
+    () => props.title,
+    (newVal) => {
+      LiveStreamingName.value = newVal
+    },
+    {immediate: true}
+)
 </script>
 
 <template>
@@ -16,9 +36,14 @@ const scrollbar = ref(true);
     <div data-v-3806f0bd="">
       <div class="nothing"></div>
     </div>
-    <div class="page-title flex1" data-v-3806f0bd=""><span
-        class="arco-tag arco-tag-size-medium arco-tag-red arco-tag-bordered arco-tag-checked live-status"><!--v-if-->已结束
-      <!--v-if--><!--v-if--></span><span class="title-name" data-v-3806f0bd="">4.9团团优品【中午线】直播</span></div>
+    <div class="page-title flex1" data-v-3806f0bd="">
+      <a-tag
+          :color="isLive ? 'green' : 'red'"
+          bordered
+      >
+        {{ isLive ? '直播中' : '已结束' }}
+      </a-tag>
+      <span class="title-name" data-v-3806f0bd="" style="margin-left: 16px;">{{ LiveStreamingName }}</span></div>
     <div class="func-btn d-flex aligni-center" data-v-3806f0bd="">
       <a-select :default-value="['商品订单','分销订单']" :scrollbar="scrollbar" :style="{width:'230px'}"
                 multiple
@@ -145,23 +170,6 @@ const scrollbar = ref(true);
   font-size: inherit;
 }
 
-body[arco-theme=dark] .arco-tag-checked.arco-tag-red {
-  background-color: rgba(247, 105, 101, 0.2);
-}
-
-.arco-tag-bordered {
-  border: 1px solid rgb(247, 105, 101);
-}
-
-.arco-tag.arco-tag-checked.arco-tag-red {
-  color: rgb(247, 105, 101);
-  background-color: rgb(77, 0, 10);
-  border: 1px solid transparent;
-}
-
-body[arco-theme=dark] .arco-tag-checked {
-  color: hsla(0, 0%, 100%, 0.9);
-}
 
 .live-status {
   margin-right: 16px;

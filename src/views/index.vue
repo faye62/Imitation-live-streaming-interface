@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <page-head></page-head>
+    <page-head :isLive="isLiveActive" :title="LivestreamingName"></page-head>
     <!-- 主要内容区域 -->
     <div class="main-content">
 
@@ -15,7 +15,7 @@
           <div class="ob-box p20 shop">
             <div class="f">
               <div class="f1">
-                <div class="ob-box-name f fc">
+                <div class="ob-box-name f fc" style="cursor: pointer;" @click="showTemplateDialog = true">
                   {{ dataMode === 'ecommerce' ? '下单 GMV' : '当前观看人数' }}
                   <i class="el-icon ml6 cp el-tooltip__trigger el-tooltip__trigger">
                     <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
@@ -25,33 +25,155 @@
                     </svg>
                   </i>
                 </div>
+
+                <!-- 模板选择弹窗 -->
+                <!-- 模板选择弹窗 -->
+                <el-dialog
+                    v-model="showTemplateDialog"
+                    title="选择数据模板"
+                    width="60%"
+                >
+                  <div class="template-editor">
+                    <el-form-item label="直播名称">
+                      <el-input
+                          v-model="LivestreamingName"
+                      />
+                    </el-form-item>
+                    <el-form-item label="直播状态">
+                      <el-radio-group v-model="isLiveActive">
+                        <el-radio-button :label="true">直播中</el-radio-button>
+                        <el-radio-button :label="false">已结束</el-radio-button>
+                      </el-radio-group>
+                    </el-form-item>
+                    <div class="template-selector">
+                      <div class="template-options">
+                        <div
+                            v-for="(template, name) in templates"
+                            :key="name"
+                            :class="{active: editingTemplate === name}"
+                            class="template-option"
+                            @click="selectTemplate(name)"
+                        >
+                          <div class="template-name">{{ name }}模板</div>
+                          <div class="template-summary">
+                            GMV: ¥{{ template.ecommerce.gmv.toFixed(1) }} |
+                            销量: {{ template.ecommerce.sales }} |
+                            商品数: {{ template.products.length }}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="template-actions">
+                        <el-button type="primary" @click="addNewTemplate">新建模板</el-button>
+                      </div>
+                    </div>
+
+                    <div v-if="editingTemplate" class="template-details">
+                      <div class="template-header">
+                        <h3>{{ editingTemplate }}模板</h3>
+                        <el-button size="small" type="primary" @click="addProductToTemplate">
+                          添加商品
+                        </el-button>
+                      </div>
+
+                      <div class="template-stats">
+                        <el-form label-width="100px">
+                          <el-form-item label="下单GMV">
+                            <el-input-number
+                                v-model="currentTemplateData.ecommerce.gmv"
+                                :min="0"
+                                :step="1000"
+                                @change="updateTemplateStats"
+                            />
+                          </el-form-item>
+                          <el-form-item label="销量">
+                            <el-input-number
+                                v-model="currentTemplateData.ecommerce.sales"
+                                :min="0"
+                                :step="100"
+                                @change="updateTemplateStats"
+                            />
+                          </el-form-item>
+                          <el-form-item label="成交人数">
+                            <el-input-number
+                                v-model="currentTemplateData.ecommerce.buyers"
+                                :min="0"
+                                :step="10"
+                            />
+                          </el-form-item>
+                        </el-form>
+                      </div>
+
+                      <div class="product-list">
+                        <div v-for="(product, index) in currentTemplateData.products"
+                             :key="index" class="product-item">
+                          <div class="product-image">
+                            <img :src="product.image || 'https://via.placeholder.com/60x60/3d4d6b/ffffff?text=Product'"
+                                 alt="">
+                          </div>
+                          <div class="product-info">
+                            <el-input v-model="product.name" placeholder="商品名称"/>
+                            <el-input-number
+                                v-model="product.price"
+                                :min="0"
+                                :step="1"
+                                placeholder="价格"
+                            />
+                            <el-input-number
+                                v-model="product.sales"
+                                :min="0"
+                                :step="1"
+                                placeholder="销量"
+                                @change="updateProductGmv(product)"
+                            />
+                          </div>
+                          <div class="product-stats">
+                            <div>成交金额: ¥{{ product.amount.toFixed(1) }}</div>
+                            <div>下单GMV: ¥{{ product.gmv.toFixed(1) }}</div>
+                          </div>
+                          <div class="product-actions">
+                            <a-button shape="circle" type="danger" @click="removeProductFromTemplate(index)">
+                              <icon-close/>
+                            </a-button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="dialog-footer">
+                      <el-button @click="showTemplateDialog = false">取消</el-button>
+                      <el-button type="primary" @click="applyCurrentTemplate">应用模板</el-button>
+                    </div>
+                  </div>
+                </el-dialog>
                 <div class="ob-box-online peple">
                   {{ dataMode === 'ecommerce' ? dynamicData.ecommerce.gmv.toFixed(1) : dynamicData.general.viewers }}
                 </div>
               </div>
               <div>
                 <div class="f fc">
-        <span class="arco-radio-group-button arco-radio-group-size-medium arco-radio-group-direction-horizontal">
-          <label
-              :class="{ 'arco-radio-checked': dataMode === 'general' }"
-              class="arco-radio-button"
-              @click="dataMode = 'general'"
-          >
-            <input :checked="dataMode === 'general'" class="arco-radio-target" type="radio" value="general">
-            <span class="arco-radio-button-content">通用数据</span>
-          </label>
-          <label
-              :class="{ 'arco-radio-checked': dataMode === 'ecommerce' }"
-              class="arco-radio-button"
-              @click="dataMode = 'ecommerce'"
-          >
-            <input :checked="dataMode === 'ecommerce'" class="arco-radio-target" type="radio" value="ecommerce">
-            <span class="arco-radio-button-content">电商数据</span>
-          </label>
-        </span>
+            <span class="arco-radio-group-button arco-radio-group-size-medium arco-radio-group-direction-horizontal">
+              <label
+                  :class="{ 'arco-radio-checked': dataMode === 'general' }"
+                  class="arco-radio-button"
+                  @click="dataMode = 'general'"
+              >
+                <input :checked="dataMode === 'general'" class="arco-radio-target" type="radio" value="general">
+                <span class="arco-radio-button-content">通用数据</span>
+              </label>
+              <label
+                  :class="{ 'arco-radio-checked': dataMode === 'ecommerce' }"
+                  class="arco-radio-button"
+                  @click="dataMode = 'ecommerce'"
+              >
+                <input :checked="dataMode === 'ecommerce'" class="arco-" type="radio" value="ecommerce">
+                <span class="arco-radio-button-content">电商数据</span>
+              </label>
+            </span>
                 </div>
               </div>
             </div>
+
 
             <div class="arco-divider arco-divider-horizontal" role="separator"></div>
 
@@ -177,12 +299,54 @@
             </div>
           </div>
           <div class="chart-area">
-            <div class="chart-tabs">
-              <span class="tab active">实时数据</span>
-              <span class="tab">互动人数</span>
-              <span class="tab">评论数</span>
+            <div class="f qushi disflex justifysb">
+              <div class="f1 ob-box-name analysis-title">
+                {{ dataMode === 'general' ? '趋势分析' : '商品销量榜' }}
+                <span v-if="dataMode === 'general'">报表数据存在2-3分钟延迟</span>
+              </div>
+              <div v-if="dataMode === 'general'" class="qushi-filter-time">
+                <div class="time-range">
+                  <span class="range-item">近15分钟</span>
+                  <span class="range-item">近30分钟</span>
+                  <span class="range-item active">近1小时</span>
+                  <span class="range-item">近2小时</span>
+                  <span class="range-item">近1天</span>
+                  <span class="range-item">近3天</span>
+                </div>
+              </div>
             </div>
-            <div ref="chartRef" class="chart-container"></div>
+
+            <!-- 通用数据 - 图表 -->
+            <div v-show="dataMode == 'general'" ref="chartRef" class="chart-container"></div>
+
+            <!-- 电商数据 - 商品销量榜 -->
+            <div v-show="dataMode == 'ecommerce'" class="top-list">
+              <div v-for="(product, index) in productList" :key="index"
+                   :class="['top-item', `top-item-${index}`]">
+                <i class="item-index">{{ index + 1 }}</i>
+                <div class="goods-info">
+                  <img :alt="product.name" :src="product.image">
+                  <div class="info-right">
+                    <div class="g-name">{{ product.name }}</div>
+                    <div class="g-price">¥{{ product.price.toFixed(2) }}</div>
+                  </div>
+                </div>
+                <div class="data-info">
+                  <div class="data disflex justifysb">
+                    <span class="data-name">下单GMV</span>
+                    <span class="data-value">¥{{ product.gmv.toFixed(1) }}</span>
+                  </div>
+                  <div class="data disflex justifysb">
+                    <span class="data-name">成交金额</span>
+                    <span class="data-value">¥{{ product.amount.toFixed(1) }}</span>
+                  </div>
+                  <div class="data disflex justifysb">
+                    <span class="data-name">销量</span>
+                    <span class="data-value">{{ product.sales }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <!-- 右侧下部分聊天记录区域 -->
@@ -197,13 +361,47 @@ import {onMounted, onUnmounted, ref} from 'vue';
 import * as echarts from 'echarts';
 import PageHead from "@/views/page-head.vue";
 import LiveChatContainer from "@/views/live-chat-container.vue";
-import CharArea from "@/views/char-area.vue";
-
+import {IconClose} from '@arco-design/web-vue/es/icon';
 
 const active = ref('customer');
 const chartRef = ref(null);
 let chart = null;
-
+const productList = ref([
+  {
+    name: '澳洛彼清肺饮【198元2盒】',
+    image: 'https://a2.vzan.com/live/1376262563/upload/image/jpg/20250410/78453b11bd094d898eacbdbc90ac3e1e.jpg',
+    price: 198.00,
+    sales: 25,
+    amount: 4950.0,
+    gmv: 6138.0
+  },
+  {
+    name: '胶原蛋白肽粉【298元3罐】',
+    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=Collagen',
+    price: 298.00,
+    sales: 18,
+    amount: 5364.0,
+    gmv: 6552.0
+  },
+  {
+    name: '益生菌固体饮料【158元1盒】',
+    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=Probiotics',
+    price: 158.00,
+    sales: 32,
+    amount: 5056.0,
+    gmv: 6320.0
+  },
+  {
+    name: '维生素C泡腾片【88元2盒】',
+    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=VitaminC',
+    price: 88.00,
+    sales: 42,
+    amount: 3696.0,
+    gmv: 4620.0
+  }
+])
+const LivestreamingName = ref('直播间名称')
+const isLiveActive = ref(true) // 默认直播中
 // 数据模式状态
 const dataMode = ref('ecommerce') // 'general' 或 'ecommerce'
 
@@ -272,10 +470,247 @@ const updateData = () => {
     checkins: randomIncrement(15, 5),
     redpacket: randomIncrement(100, 50)
   }
-
+  //更新商品数据
+  updateProductData()
   updateTime()
 }
+// 预设模板数据
+const templates = ref({
+  '5万': {
+    ecommerce: {
+      gmv: 50000,
+      sales: 3691,
+      buyers: 2001,
+      avgPrice: 12.5,
+      viewers: 3552,
+      conversion: 14.5,
+      liveSales: 45000
+    },
+    products: [
+      {name: '原浆纸', price: 12.5, sales: 1000, amount: 12500, gmv: 15000},
+      {name: '运动鞋', price: 150, sales: 100, amount: 15000, gmv: 18000},
+      {name: '哈尔滨红肠', price: 30, sales: 500, amount: 15000, gmv: 18000}
+    ]
+  },
+  '10万': {
+    ecommerce: {
+      gmv: 100363.2,
+      sales: 7382,
+      buyers: 4002,
+      avgPrice: 13.59,
+      viewers: 7104,
+      conversion: 15.24,
+      liveSales: 90000
+    },
+    products: [
+      {name: '原浆纸', price: 12.5, sales: 3000, amount: 37500, gmv: 45000},
+      {name: '运动鞋', price: 150, sales: 200, amount: 30000, gmv: 36000},
+      {name: '哈尔滨红肠', price: 30, sales: 1000, amount: 30000, gmv: 36000},
+      {name: '松花鸡腿', price: 25, sales: 500, amount: 12500, gmv: 15000}
+    ]
+  },
+  '20万': {
+    ecommerce: {
+      gmv: 200726.4,
+      sales: 14764,
+      buyers: 8004,
+      avgPrice: 13.59,
+      viewers: 14208,
+      conversion: 15.24,
+      liveSales: 180000
+    },
+    products: [
+      {name: '原浆纸', price: 12.5, sales: 6000, amount: 75000, gmv: 90000},
+      {name: '运动鞋', price: 150, sales: 400, amount: 60000, gmv: 72000},
+      {name: '哈尔滨红肠', price: 30, sales: 2000, amount: 60000, gmv: 72000},
+      {name: '松花鸡腿', price: 25, sales: 1000, amount: 25000, gmv: 30000}
+    ]
+  }
+})
 
+// 当前模板名称
+const currentTemplate = ref('10万')
+// 是否显示模板选择弹窗
+const showTemplateDialog = ref(false)
+
+// 应用模板
+const applyTemplate = (templateName) => {
+  currentTemplate.value = templateName
+  const template = templates.value[templateName]
+
+  // 更新电商数据
+  dynamicData.value.ecommerce = {...template.ecommerce}
+
+  // 更新商品列表
+  productList.value = template.products.map(p => ({...p}))
+
+  showTemplateDialog.value = false
+}
+
+
+// 生成随机但协调的渐变背景
+const generateRandomGradient = (index) => {
+  const hue = (index * 30) % 360; // 确保颜色分布均匀
+  return {
+    background: `linear-gradient(180deg,
+      hsla(${hue}, 80%, 60%, 0.5),
+      hsla(${hue}, 80%, 70%, 0.41) 36%,
+      hsla(${hue}, 80%, 80%, 0.1))`,
+    border: `1px solid hsla(${hue}, 80%, 65%, 0.3)`
+  }
+}
+
+// 在添加商品时应用
+const addProduct = () => {
+  const newIndex = productList.value.length
+  const gradient = generateRandomGradient(newIndex)
+
+  productList.value.push({
+    name: '新商品',
+    price: 0,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+    image: '',
+    style: {
+      background: gradient.background,
+      border: gradient.border
+    }
+  })
+}
+// 删除商品
+const removeProduct = (index) => {
+  productList.value.splice(index, 1)
+  updateProductTotals()
+}
+// 当前正在编辑的模板名称
+const editingTemplate = ref('')
+// 当前模板数据副本
+const currentTemplateData = ref(null)
+
+// 选择模板进行编辑
+const selectTemplate = (templateName) => {
+  editingTemplate.value = templateName
+  // 创建深拷贝
+  currentTemplateData.value = JSON.parse(JSON.stringify(templates.value[templateName]))
+}
+
+// 添加新模板
+const addNewTemplate = () => {
+  const newTemplateName = `模板${Object.keys(templates.value).length + 1}`
+  templates.value[newTemplateName] = {
+    ecommerce: {
+      gmv: 0,
+      sales: 0,
+      buyers: 0,
+      avgPrice: 0,
+      viewers: 0,
+      conversion: 0,
+      liveSales: 0
+    },
+    products: []
+  }
+  selectTemplate(newTemplateName)
+}
+
+// 向模板添加商品
+const addProductToTemplate = () => {
+  currentTemplateData.value.products.push({
+    name: '新商品',
+    price: 0,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+    image: ''
+  })
+}
+
+// 从模板移除商品
+const removeProductFromTemplate = (index) => {
+  currentTemplateData.value.products.splice(index, 1)
+  updateTemplateStats()
+}
+
+// 更新商品GMV
+const updateProductGmv = (product) => {
+  product.amount = product.sales * product.price
+  product.gmv = product.amount * 1.2
+  updateTemplateStats()
+}
+
+// 更新模板统计数据
+const updateTemplateStats = () => {
+  const ecommerce = currentTemplateData.value.ecommerce
+  const products = currentTemplateData.value.products
+
+  // 计算总和
+  let totalSales = 0
+  let totalAmount = 0
+  let totalGmv = 0
+
+  products.forEach(product => {
+    product.amount = product.sales * product.price
+    product.gmv = product.amount * 1.2
+
+    totalSales += product.sales
+    totalAmount += product.amount
+    totalGmv += product.gmv
+  })
+
+  // 更新电商数据
+  ecommerce.sales = totalSales
+  ecommerce.liveSales = totalAmount
+  ecommerce.gmv = totalGmv
+  ecommerce.avgPrice = totalSales > 0 ? totalAmount / totalSales : 0
+  ecommerce.buyers = Math.floor(totalSales / 1.8) // 假设平均每人购买1.8件
+}
+
+// 应用当前编辑的模板
+const applyCurrentTemplate = () => {
+  if (editingTemplate.value && currentTemplateData.value) {
+    // 更新模板数据
+    templates.value[editingTemplate.value] = JSON.parse(JSON.stringify(currentTemplateData.value))
+
+    // 应用模板
+    applyTemplate(editingTemplate.value)
+
+    showTemplateDialog.value = false
+  }
+}
+// 更新商品数据时同步更新总量
+const updateProductData = () => {
+  // 计算商品总和
+  let totalSales = 0
+  let totalAmount = 0
+  let totalGmv = 0
+
+  productList.value.forEach(product => {
+    // 随机增加销量 (0-3个)
+    const increment = Math.floor(Math.random() * 4)
+    product.sales += increment
+    // 计算金额增长
+    product.amount = product.sales * product.price
+    // GMV增长略高于实际金额 (约1.2倍)
+    product.gmv = product.amount * 1.2
+
+    totalSales += product.sales
+    totalAmount += product.amount
+    totalGmv += product.gmv
+  })
+
+  // 更新电商数据
+  dynamicData.value.ecommerce = {
+    ...dynamicData.value.ecommerce,
+    sales: totalSales,
+    buyers: Math.floor(totalSales / 1.8), // 假设平均每人购买1.8件
+    avgPrice: totalAmount / totalSales,
+    liveSales: totalAmount,
+    gmv: totalGmv
+  }
+
+  // 按销量排序
+  productList.value.sort((a, b) => b.sales - a.sales)
+}
 // 初始化图表
 const initChart = () => {
   if (!chartRef.value) return;
@@ -393,14 +828,72 @@ onUnmounted(() => {
 }
 
 .chart-area {
-  width: 400px;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  background: rgba(26, 32, 45, .5);
+  border-radius: 0 12px 12px 0;
+  border: 1px solid #1a202d;
+  border-left: 0;
+  flex: 1;
+  height: 345px;
+  padding: 20px;
+  max-width: 54vw;
 }
 
 .chart-container {
   width: 999px;
   height: 260px;
+}
+
+.justifysb {
+  justify-content: space-between;
+}
+
+.analysis-title {
+  font-size: 16px;
+}
+
+.analysis-title span {
+  font-size: 13px;
+  color: hsla(0, 0%, 100%, .5);
+  margin-left: 16px;
+  line-height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ob-box-name {
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .8);
+  line-height: 32px;
+  margin-bottom: 16px;
+}
+
+.time-range {
+  background: #060d1b;
+  border-radius: 10px 10px 10px 10px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.range-item {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 8px;
+  color: hsla(0, 0%, 100%, .6);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.ob-box-name {
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .8);
+  line-height: 32px;
+}
+
+.range-item.active {
+  background: rgba(65, 79, 110, .4);
+  color: #fff;
 }
 
 .ob-box {
@@ -570,9 +1063,282 @@ onUnmounted(() => {
   padding: 0 12px;
 }
 
+.arco-radio-button-content {
+  color: #fff !important;
+  border-radius: 8px;
+}
+
 .arco-radio-checked .arco-radio-button-content {
   color: #fff !important;
   background: rgba(65, 79, 110, .6);
-  border-radius: 8px;
+}
+
+.top-list {
+
+  display: flex;
+  flex-wrap: nowrap; /* 禁止换行 */
+  overflow-x: auto; /* 横向滚动 */
+  overflow-y: hidden; /* 隐藏纵向滚动 */
+  gap: 10px; /* 卡片间距 */
+  padding: 10px 0; /* 上下内边距 */
+  width: 100%; /* 确保宽度填满容器 */
+  -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
+}
+
+.top-item {
+  width: 327px;
+  height: 257px;
+  border-radius: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-right: 0;
+  position: relative;
+}
+
+/* 为每个卡片添加不同的渐变背景 */
+.top-item-0 {
+  background: linear-gradient(180deg, rgba(0, 225, 255, .5), rgba(121, 235, 248, .41) 36%, rgba(128, 230, 223, .1));
+  border: 1px solid rgba(104, 217, 225, .3);
+}
+
+.top-item-1 {
+  background: linear-gradient(180deg, rgba(255, 175, 0, .5), rgba(255, 200, 50, .41) 36%, rgba(255, 225, 100, .1));
+  border: 1px solid rgba(255, 190, 30, .3);
+}
+
+.top-item-2 {
+  background: linear-gradient(180deg, rgba(150, 0, 255, .5), rgba(180, 50, 255, .41) 36%, rgba(210, 100, 255, .1));
+  border: 1px solid rgba(170, 30, 255, .3);
+}
+
+.top-item-3 {
+  background: linear-gradient(180deg, rgba(0, 255, 150, .5), rgba(50, 255, 180, .41) 36%, rgba(100, 255, 210, .1));
+  border: 1px solid rgba(30, 255, 170, .3);
+}
+
+.top-item-4 {
+  background: linear-gradient(180deg, rgba(255, 0, 100, .5), rgba(255, 50, 130, .41) 36%, rgba(255, 100, 160, .1));
+  border: 1px solid rgba(255, 30, 120, .3);
+}
+
+.item-index {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  background: hsla(0, 0%, 100%, .1);
+  border-radius: 12px 0 12px 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .8);
+  line-height: 24px;
+  font-style: normal;
+  text-transform: none;
+}
+
+.goods-info {
+  display: flex;
+  margin: 12px 0 12px 0;
+}
+
+.goods-info img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px 8px 8px 8px;
+  margin-right: 20px;
+}
+
+.g-name, .g-price {
+  font-weight: 400;
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .6);
+  line-height: 24px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  letter-spacing: -.24px;
+}
+
+.g-price {
+  font-weight: 400;
+  font-size: 14px;
+  color: hsla(0, 0%, 100%, .6);
+  line-height: 24px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  letter-spacing: -.24px;
+}
+
+.data-info {
+  width: 100%;
+  background: hsla(0, 0%, 100%, .05);
+  border-radius: 8px 8px 8px 8px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.data {
+  height: 24px;
+  line-height: 24px;
+  box-sizing: content-box;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid hsla(0, 0%, 100%, .1);
+  padding-top: 12px;
+}
+
+.data:first-child {
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+
+.data:last-child {
+  padding-top: 12px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.justifysb {
+  justify-content: space-between;
+}
+
+.data .data-name {
+  color: hsla(0, 0%, 100%, .6);
+}
+
+.template-editor {
+  display: flex;
+  flex-direction: column;
+
+}
+
+.template-selector {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.template-options {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.template-option {
+  width: calc(33.33% - 10px);
+  padding: 12px;
+  border: 1px solid #363c4a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.template-option:hover {
+  border-color: #409EFF;
+}
+
+.template-option.active {
+  border-color: #409EFF;
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.template-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.template-summary {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.template-actions {
+  width: 120px;
+  margin-left: 20px;
+}
+
+.template-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #363c4a;
+  padding-top: 20px;
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.template-stats {
+  margin-bottom: 20px;
+}
+
+.product-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #363c4a;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  margin-right: 15px;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+}
+
+.product-info .el-input,
+.product-info .el-input-number {
+  width: 120px;
+}
+
+.product-stats {
+  width: 150px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.product-actions {
+  width: 50px;
+}
+
+.dialog-footer {
+  margin-top: 20px;
+  text-align: right;
 }
 </style>

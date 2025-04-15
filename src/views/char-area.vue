@@ -1,4 +1,181 @@
-<script lang="ts" setup></script>
+<script setup>
+import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+
+// 虚拟弹幕库 - 直播带货相关
+const barrageLibrary = [
+  "这个价格太划算了！",
+  "主播能再优惠点吗？",
+  "已经下单了，期待收货",
+  "质量怎么样啊？",
+  "有没有小样赠送？",
+  "包邮吗？",
+  "什么时候发货？",
+  "这个色号适合黄皮吗？",
+  "主播能试穿一下吗？",
+  "老顾客了，再给点优惠吧",
+  "买三件能打折吗？",
+  "支持7天无理由退货吗？",
+  "有没有现货？",
+  "快递发什么？",
+  "这个和之前那款有什么区别？",
+  "主播讲解得很详细",
+  "已经收到货了，质量不错",
+  "能开发票吗？",
+  "学生党有优惠吗？",
+  "这个季节适合用吗？",
+  "敏感肌能用吗？",
+  "保质期到什么时候？",
+  "买二送一活动还有吗？",
+  "主播声音真好听",
+  "关注了，下次还来",
+  "这个链接在哪？",
+  "能再介绍下功能吗？",
+  "有没有更多颜色选择？",
+  "尺寸标准吗？",
+  "第一次买，有点犹豫",
+  "老用户回购有礼吗？",
+  "赠品是什么？",
+  "能组合购买吗？",
+  "这个和专柜一样吗？",
+  "生产日期新鲜吗？",
+  "主播多高多重？参考下",
+  "能包邮到新疆吗？",
+  "下单后多久能到？",
+  "有没有防伪标识？",
+  "这个适合送人吗？"
+]
+
+// 虚拟用户名库
+const userNames = [
+  "购物达人小张", "爱买买的小李", "剁手党老王", "省钱小能手",
+  "网购专家", "品质生活家", "美妆控", "时尚买手",
+  "居家好物推荐官", "数码爱好者", "美食家", "旅行达人",
+  "健康生活", "运动爱好者", "宝妈购物", "学生党省钱",
+  "上班族购物", "退休生活", "精致女孩", "品质男士"
+]
+
+// 虚拟用户头像库
+const userAvatars = [
+  "https://randomuser.me/api/portraits/women/1.jpg",
+  "https://randomuser.me/api/portraits/women/2.jpg",
+  "https://randomuser.me/api/portraits/women/3.jpg",
+  "https://randomuser.me/api/portraits/women/4.jpg",
+  "https://randomuser.me/api/portraits/women/5.jpg",
+  "https://randomuser.me/api/portraits/men/1.jpg",
+  "https://randomuser.me/api/portraits/men/2.jpg",
+  "https://randomuser.me/api/portraits/men/3.jpg",
+  "https://randomuser.me/api/portraits/men/4.jpg",
+  "https://randomuser.me/api/portraits/men/5.jpg"
+]
+
+const messages = ref([])
+const containerRef = ref(null)
+let timer = null
+let scrollTimer = null
+let isUserScrolling = false
+
+// 滚动到底部
+const scrollToBottom = () => {
+  if (!isUserScrolling && containerRef.value) {
+    nextTick(() => {
+      containerRef.value.scrollTop = containerRef.value.scrollHeight
+    })
+  }
+}
+
+// 处理滚动事件
+const handleScroll = () => {
+  if (containerRef.value) {
+    const {scrollTop, scrollHeight, clientHeight} = containerRef.value
+    const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50
+
+    if (isNearBottom) {
+      isUserScrolling = false
+    } else if (scrollTop < lastScrollTop) {
+      isUserScrolling = true
+      clearTimeout(scrollTimer)
+      scrollTimer = setTimeout(() => {
+        isUserScrolling = false
+      }, 3000)
+    }
+
+    lastScrollTop = scrollTop
+  }
+}
+
+// 修改后的时间生成逻辑
+let lastMessageTime = new Date() // 记录最新消息的时间
+
+const generateRandomMessage = () => {
+  const randomBarrage = barrageLibrary[Math.floor(Math.random() * barrageLibrary.length)]
+  const randomName = userNames[Math.floor(Math.random() * userNames.length)]
+  const randomAvatar = userAvatars[Math.floor(Math.random() * userAvatars.length)]
+
+  // 生成比最新消息早1-10秒的时间（因为是倒序）
+  const newTime = new Date(lastMessageTime.getTime() - (1000 + Math.random() * 9000))
+  lastMessageTime = newTime
+
+  // 格式化时间为 HH:MM:SS
+  const hours = String(newTime.getHours()).padStart(2, '0')
+  const minutes = String(newTime.getMinutes()).padStart(2, '0')
+  const seconds = String(newTime.getSeconds()).padStart(2, '0')
+  const formattedTime = `${hours}:${minutes}:${seconds}`
+
+  return {
+    id: Date.now() + Math.random().toString(36).substring(2, 9),
+    username: randomName,
+    content: randomBarrage,
+    time: formattedTime,
+    avatar: randomAvatar,
+    status: Math.random() > 0.5 ? '已通过' : '待审核'
+  }
+}
+// 修改后的消息生成和滚动逻辑
+const startGeneratingMessages = () => {
+  // 初始生成10条消息（最新的在最前面）
+  for (let i = 0; i < 10; i++) {
+    messages.value.unshift(generateRandomMessage())
+  }
+  scrollToBottom()
+
+  // 每隔2-5秒生成一条新消息（插入到数组开头）
+  timer = setInterval(() => {
+    const newMessage = generateRandomMessage()
+    messages.value.unshift(newMessage)
+
+    // 限制消息数量，最多保留100条（从末尾删除）
+    if (messages.value.length > 100) {
+      messages.value.pop()
+    }
+
+    // 如果用户没有手动滚动，保持滚动到顶部（显示最新消息）
+    if (!isUserScrolling) {
+      nextTick(() => {
+        if (containerRef.value) {
+          containerRef.value.scrollTop = 0
+        }
+      })
+    }
+  }, 2000 + Math.random() * 3000)
+}
+onMounted(() => {
+  // 从当前时间开始生成消息
+  lastMessageTime = new Date()
+  startGeneratingMessages()
+
+  if (containerRef.value) {
+    containerRef.value.addEventListener('scroll', handleScroll)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer)
+  if (scrollTimer) clearTimeout(scrollTimer)
+  if (containerRef.value) {
+    containerRef.value.removeEventListener('scroll', handleScroll)
+  }
+})
+</script>
 
 <template>
   <div class="ob-content">
@@ -46,52 +223,57 @@
               <div class="top-menu f gap10 f1 pt10 pb10">
                 <button
                     class="arco-btn arco-btn-primary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-check-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="m15 22 7 7 11.5-11.5M42 24c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
+                    type="button"
+                >
+              <span class="arco-btn-icon">
+                <svg class="arco-icon arco-icon-check-circle" fill="none" stroke="currentColor"
+                     stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <path
+                      d="m15 22 7 7 11.5-11.5M42 24c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path>
+                </svg>
+              </span>
                   批量通过
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
+                    type="button"
+                >
+              <span class="arco-btn-icon">
+                <svg class="arco-icon arco-icon-minus-circle" fill="none" stroke="currentColor"
+                     stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <path d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path>
+                </svg>
+              </span>
                   批量不通过
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-delete"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M5 11h5.5m0 0v29a1 1 0 0 0 1 1h25a1 1 0 0 0 1-1V11m-27 0H16m21.5 0H43m-5.5 0H32m-16 0V7h16v4m-16 0h16M20 18v15m8-15v15"></path></svg></span>
+                    type="button"
+                >
+              <span class="arco-btn-icon">
+                <svg class="arco-icon arco-icon-delete" fill="none" stroke="currentColor"
+                     stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <path
+                      d="M5 11h5.5m0 0v29a1 1 0 0 0 1 1h25a1 1 0 0 0 1-1V11m-27 0H16m21.5 0H43m-5.5 0H32m-16 0V7h16v4m-16 0h16M20 18v15m8-15v15"></path>
+                </svg>
+              </span>
                   批量删除
                 </button>
                 <div class="f1"></div>
                 <label class="f fcc" style="height: 32px">推荐状态:</label>
                 <a-select :style="{width:'120px'}" default-value="全部" style="height: 32px;border-radius: 8px">
                   <a-option>全部</a-option>
-                  <a-option>Shanghai</a-option>
-                  <a-option>Guangzhou</a-option>
-                  <a-option disabled>Disabled</a-option>
+                  <a-option>已推荐</a-option>
+                  <a-option>未推荐</a-option>
                 </a-select>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal"
-
-                    type="button"><!--v-if--> 更多操作
+                    type="button"
+                >
+                  更多操作
                   <div class="ml10">
                     <svg class="arco-icon arco-icon-down" fill="none" stroke="currentColor"
                          stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
@@ -102,682 +284,125 @@
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal"
-
-                    type="button"><!--v-if-->设置
+                    type="button"
+                >
+                  设置
                 </button>
                 <div>
                   <button
                       class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal arco-btn-only-icon"
-
-                      type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-refresh"
-                                                                     fill="none" stroke="currentColor"
-                                                                     stroke-linecap="butt"
-                                                                     stroke-linejoin="miter"
-                                                                     stroke-width="4" viewBox="0 0 48 48"
-                                                                     xmlns="http://www.w3.org/2000/svg"><path
-                      d="M38.837 18C36.463 12.136 30.715 8 24 8 15.163 8 8 15.163 8 24s7.163 16 16 16c7.455 0 13.72-5.1 15.496-12M40 8v10H30"></path></svg></span>
+                      type="button"
+                  >
+                <span class="arco-btn-icon">
+                  <svg class="arco-icon arco-icon-refresh" fill="none" stroke="currentColor"
+                       stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
+                       xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M38.837 18C36.463 12.136 30.715 8 24 8 15.163 8 8 15.163 8 24s7.163 16 16 16c7.455 0 13.72-5.1 15.496-12M40 8v10H30"></path>
+                  </svg>
+                </span>
                   </button>
                 </div>
               </div>
             </section>
-            <div class="page-table-head"><label class="arco-checkbox cfff_6"
-            ><input class="arco-checkbox-target"
-                    type="checkbox"
-                    value="false"><span
-                class="arco-icon-hover arco-checkbox-icon-hover"><div
-                class="arco-checkbox-icon"><!----></div></span><span
-                class="arco-checkbox-label">全选聊天内容</span></label><label class="arco-checkbox cfff_6"
-            ><input
-                class="arco-checkbox-target" type="checkbox" value="false"><span
-                class="arco-icon-hover arco-checkbox-icon-hover"><div
-                class="arco-checkbox-icon"><!----></div></span><span
-                class="arco-checkbox-label">查看敏感词屏蔽记录</span></label></div>
+            <div class="page-table-head">
+              <label class="arco-checkbox cfff_6">
+                <input class="arco-checkbox-target" type="checkbox" value="false">
+                <span class="arco-icon-hover arco-checkbox-icon-hover">
+              <div class="arco-checkbox-icon"></div>
+            </span>
+                <span class="arco-checkbox-label">全选聊天内容</span>
+              </label>
+              <label class="arco-checkbox cfff_6">
+                <input class="arco-checkbox-target" type="checkbox" value="false">
+                <span class="arco-icon-hover arco-checkbox-icon-hover">
+              <div class="arco-checkbox-icon"></div>
+            </span>
+                <span class="arco-checkbox-label">查看敏感词屏蔽记录</span>
+              </label>
+            </div>
           </header>
-          <div class="page-table">
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
 
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2025-2-24/125658ae0de2a9c82d4760884d86c8ca3305e1.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
+          <div ref="containerRef" class="page-table">
+            <div v-for="item in messages" :key="item.id" class="f page-table-item">
+              <div class="pt10">
+                <label class="arco-checkbox">
+                  <input class="arco-checkbox-target" type="checkbox" value="false">
+                  <span class="arco-icon-hover arco-checkbox-icon-hover">
+                <div class="arco-checkbox-icon"></div>
+              </span>
+                </label>
+              </div>
+              <div class="pl10">
+            <span class="arco-badge">
+              <div class="arco-avatar arco-avatar-circle" style="width: 40px; height: 40px; font-size: 20px;">
+                <span class="arco-avatar-image">
+                  <img :alt="item.username" :src="item.avatar">
+                </span>
+              </div>
+              <span class="arco-badge-text" style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span>
+            </span>
               </div>
               <div class="pl16 f1">
                 <div class="f fv">
-                  <div class="page-table-item-name">请记住我</div>
+                  <div class="page-table-item-name">{{ item.username }}</div>
                   <div class="f fc id-time">
-                    <div class="mw100">ID 591093430</div>
-                    <div class="pl12">2025-04-11 09:02:59</div>
+                    <div class="mw100">ID {{ Math.floor(Math.random() * 1000000000) }}</div>
+                    <div class="pl12">{{ item.time }}</div>
                   </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >给力</span>
+                  <div class="page-table-item-content">
+                    <span class="line2 break-word">{{ item.content }}</span>
                   </div>
                 </div>
               </div>
               <div>
                 <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2025-3-6/0413191958c1f563824981a1d07126ddc2412b.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">李翠琴</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 568815290</div>
-                    <div class="pl12">2025-04-10 18:04:00</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >欢迎王总</span>
+                  <div class="comment-state">
+                    <span :style="{ background: item.status === '已通过' ? 'rgb(0, 184, 73)' : 'rgb(255, 125, 0)' }"
+                          class="state-ball"></span>
+                    <p class="state-text">{{ item.status }}</p>
                   </div>
                 </div>
               </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
               <div class="w10"></div>
-              <div class="f"><!---->
+              <div class="f">
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
+                    type="button"
+                >
+              <span class="arco-btn-icon">
+                <svg class="arco-icon arco-icon-minus-circle" fill="none" stroke="currentColor"
+                     stroke-linecap="butt" stroke-linejoin="miter" stroke-width="4" viewBox="0 0 48 48"
+                     xmlns="http://www.w3.org/2000/svg">
+                  <path d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path>
+                </svg>
+              </span>
                   不通过
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
+                    type="button"
+                >
+                  禁言
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2025-3-5/2036316dc24981797d4cd6835f45b0fdb84e06.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">生命之花</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 456941959</div>
-                    <div class="pl12">2025-04-10 14:26:07</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >给力</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
+                    type="button"
+                >
+                  拉黑
                 </button>
                 <button
                     class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
+                    type="button"
+                >
+                  推荐
                 </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://i2.vzan.com/image/live/headimg/jpeg/2018/8/27/093111ddceeebb6a7c4ff1b31ec01d0ff10c12.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
               </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">水滴</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 114466271</div>
-                    <div class="pl12">2025-04-10 14:19:34</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >中午好</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://i2.vzan.com/image/live/headimg/jpeg/2018/8/27/093111ddceeebb6a7c4ff1b31ec01d0ff10c12.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">水滴</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 114466271</div>
-                    <div class="pl12">2025-04-10 14:19:33</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >中午好</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2024-11-18/084646d49a499afdd643a79f58d869704377ba.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">家和万事兴QD5</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 323137081</div>
-                    <div class="pl12">2025-04-10 14:18:34</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >666</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2024-11-18/084646d49a499afdd643a79f58d869704377ba.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">家和万事兴QD5</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 323137081</div>
-                    <div class="pl12">2025-04-10 14:18:33</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >666</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2022-7-23/192317e98b7ef62ae44542b2a4246e36a5beae.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">老兵</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 484367754</div>
-                    <div class="pl12">2025-04-10 14:18:11</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >666</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2022-7-23/192317e98b7ef62ae44542b2a4246e36a5beae.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">老兵</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 484367754</div>
-                    <div class="pl12">2025-04-10 14:18:10</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >666</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
-            </div>
-            <div class="f page-table-item"><!---->
-              <div class="pt10"><label class="arco-checkbox"><input
-                  class="arco-checkbox-target" type="checkbox" value="false"><span
-                  class="arco-icon-hover arco-checkbox-icon-hover"><div class="arco-checkbox-icon"><!----></div></span>
-                <!----></label></div>
-              <div class="pl10"><span class="arco-badge"><div class="arco-avatar arco-avatar-circle"
-
-                                                              style="width: 40px; height: 40px; font-size: 20px;"><span
-                  class="arco-avatar-image"><img alt=""
-
-                                                 src="https://a2.vzan.com/image/live/headimg/jpeg/2022-7-23/192317e98b7ef62ae44542b2a4246e36a5beae.jpeg"></span>
-                <!--v-if--></div><span class="arco-badge-text"
-                                       style="background: rgb(0, 108, 255); color: rgb(255, 255, 255);">普通</span></span>
-              </div>
-              <div class="pl16 f1">
-                <div class="f fv">
-                  <div class="page-table-item-name">老兵</div>
-                  <div class="f fc id-time">
-                    <div class="mw100">ID 484367754</div>
-                    <div class="pl12">2025-04-10 14:18:04</div>
-                  </div>
-                  <div class="page-table-item-content"><span class="line2 break-word"
-                  >666</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div class="mt8">
-                  <div class="comment-state"><span class="state-ball"
-
-                                                   style="background: rgb(0, 184, 73);"></span>
-                    <p class="state-text">已通过</p></div><!----></div>
-              </div>
-              <div class="w10"></div>
-              <div class="f"><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><span class="arco-btn-icon"><svg class="arco-icon arco-icon-minus-circle"
-                                                                   fill="none" stroke="currentColor"
-                                                                   stroke-linecap="butt"
-                                                                   stroke-linejoin="miter"
-                                                                   stroke-width="4" viewBox="0 0 48 48"
-                                                                   xmlns="http://www.w3.org/2000/svg"><path
-                    d="M32 24H16m26 0c0 9.941-8.059 18-18 18S6 33.941 6 24 14.059 6 24 6s18 8.059 18 18Z"></path></svg></span>
-                  不通过
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->禁言
-                </button><!---->
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->拉黑
-                </button>
-                <button
-                    class="arco-btn arco-btn-secondary arco-btn-shape-square arco-btn-size-medium arco-btn-status-normal ml8"
-
-                    type="button"><!--v-if-->推荐
-                </button><!----><!----></div>
             </div>
           </div>
+
           <div class="f f-e mt8 pb12 pr10">
-
             <a-pagination :total="1630" show-total/>
-
-          </div>
-          <div></div>
-          <div></div>
-          <div class="recommend-dialog" modelvalue="false">
-            <div class="el-overlay" style="z-index: 2182; display: none;">
-              <div aria-describedby="el-id-4520-384" aria-labelledby="el-id-4520-383" aria-modal="true"
-                   class="el-overlay-dialog"
-                   role="dialog"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -793,6 +418,7 @@
   position: relative;
   flex: 1;
   margin-top: 8px;
+  max-width: 79vw;
 }
 
 .ob-components {
