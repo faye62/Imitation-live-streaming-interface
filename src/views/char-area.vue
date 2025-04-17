@@ -1,5 +1,26 @@
 <script setup>
 import {nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+import t1 from '@/assets/head-sculpture/t1.jpeg'
+import t2 from '@/assets/head-sculpture/t2.jpeg'
+import t3 from '@/assets/head-sculpture/t3.jpeg'
+import t4 from '@/assets/head-sculpture/t4.jpeg'
+import t5 from '@/assets/head-sculpture/t5.jpeg'
+import t6 from '@/assets/head-sculpture/t6.jpeg'
+import t7 from '@/assets/head-sculpture/t7.jpeg'
+import t8 from '@/assets/head-sculpture/t8.jpeg'
+import t9 from '@/assets/head-sculpture/t9.jpeg'
+import t10 from '@/assets/head-sculpture/t10.jpeg'
+import t11 from '@/assets/head-sculpture/t11.jpeg'
+import t12 from '@/assets/head-sculpture/t12.jpeg'
+import t13 from '@/assets/head-sculpture/t13.jpeg'
+import t14 from '@/assets/head-sculpture/t14.jpeg'
+import t15 from '@/assets/head-sculpture/t15.jpeg'
+import t16 from '@/assets/head-sculpture/t16.jpeg'
+import t17 from '@/assets/head-sculpture/t17.jpeg'
+import t18 from '@/assets/head-sculpture/t18.jpeg'
+import t19 from '@/assets/head-sculpture/t19.jpeg'
+import t20 from '@/assets/head-sculpture/t20.jpeg'
+
 
 // 虚拟弹幕库 - 直播带货相关
 const barrageLibrary = [
@@ -42,30 +63,21 @@ const barrageLibrary = [
   "能包邮到新疆吗？",
   "下单后多久能到？",
   "有没有防伪标识？",
-  "这个适合送人吗？"
+  "这个适合送人吗？", "666", "真实惠"
 ]
 
 // 虚拟用户名库
 const userNames = [
-  "购物达人小张", "爱买买的小李", "剁手党老王", "省钱小能手",
-  "网购专家", "品质生活家", "美妆控", "时尚买手",
-  "居家好物推荐官", "数码爱好者", "美食家", "旅行达人",
-  "健康生活", "运动爱好者", "宝妈购物", "学生党省钱",
-  "上班族购物", "退休生活", "精致女孩", "品质男士"
+  "老兵", "方翠兰", "勇往直前", "小宝姥姥",
+  "小娟", "朱贵清", "平平安安", "福寿康乐",
+  "海纳百川", "小李奶奶", "美食家", "旅行达人",
+  "健康生活", "往事如烟", "hxhn", "老方",
+  "凤舞九天", "退休生活", "碧海蓝天", "家和万事兴", "柳暗花明", "小小鸟", "文竹"
 ]
 
 // 虚拟用户头像库
 const userAvatars = [
-  "https://randomuser.me/api/portraits/women/1.jpg",
-  "https://randomuser.me/api/portraits/women/2.jpg",
-  "https://randomuser.me/api/portraits/women/3.jpg",
-  "https://randomuser.me/api/portraits/women/4.jpg",
-  "https://randomuser.me/api/portraits/women/5.jpg",
-  "https://randomuser.me/api/portraits/men/1.jpg",
-  "https://randomuser.me/api/portraits/men/2.jpg",
-  "https://randomuser.me/api/portraits/men/3.jpg",
-  "https://randomuser.me/api/portraits/men/4.jpg",
-  "https://randomuser.me/api/portraits/men/5.jpg"
+  t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20
 ]
 
 const messages = ref([])

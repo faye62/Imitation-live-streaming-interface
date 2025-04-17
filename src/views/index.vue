@@ -45,98 +45,44 @@
                         <el-radio-button :label="false">已结束</el-radio-button>
                       </el-radio-group>
                     </el-form-item>
-                    <div class="template-selector">
-                      <div class="template-options">
-                        <div
-                            v-for="(template, name) in templates"
-                            :key="name"
-                            :class="{active: editingTemplate === name}"
-                            class="template-option"
-                            @click="selectTemplate(name)"
-                        >
-                          <div class="template-name">{{ name }}模板</div>
-                          <div class="template-summary">
-                            GMV: ¥{{ template.ecommerce.gmv.toFixed(1) }} |
-                            销量: {{ template.ecommerce.sales }} |
-                            商品数: {{ template.products.length }}
-                          </div>
-                        </div>
-                      </div>
+                    <el-form-item label="数据模板(万)">
+                      <el-input-number
+                          v-model="formData.ecommerce.gmv"
+                      />
+                    </el-form-item>
+                    <div class="template-details">
+                      <el-table
+                          :data="productList"
+                          row-key="id"
+                          style="width: 70%"
+                          @selection-change="handleSelectionChange"
+                      >
+                        <el-table-column type="selection" width="55"/>
+                        <el-table-column label="商品图片" width="120">
+                          <template #default="scope">
+                            <div class="product-image">
+                              <img
+                                  :src="scope.row.image || 'https://via.placeholder.com/60x60/3d4d6b/ffffff?text=Product'"
+                                  alt="">
+                            </div>
+                          </template>
+                        </el-table-column>
+                        <el-table-column label="商品名称">
+                          <template #default="scope">
+                            <el-input v-model="scope.row.name" placeholder="商品名称"/>
+                          </template>
+                        </el-table-column>
+                      </el-table>
 
-                      <div class="template-actions">
-                        <el-button type="primary" @click="addNewTemplate">新建模板</el-button>
-                      </div>
-                    </div>
-
-                    <div v-if="editingTemplate" class="template-details">
-                      <div class="template-header">
-                        <h3>{{ editingTemplate }}模板</h3>
-                        <el-button size="small" type="primary" @click="addProductToTemplate">
-                          添加商品
-                        </el-button>
-                      </div>
-
-                      <div class="template-stats">
-                        <el-form label-width="100px">
-                          <el-form-item label="下单GMV">
-                            <el-input-number
-                                v-model="currentTemplateData.ecommerce.gmv"
-                                :min="0"
-                                :step="1000"
-                                @change="updateTemplateStats"
-                            />
-                          </el-form-item>
-                          <el-form-item label="销量">
-                            <el-input-number
-                                v-model="currentTemplateData.ecommerce.sales"
-                                :min="0"
-                                :step="100"
-                                @change="updateTemplateStats"
-                            />
-                          </el-form-item>
-                          <el-form-item label="成交人数">
-                            <el-input-number
-                                v-model="currentTemplateData.ecommerce.buyers"
-                                :min="0"
-                                :step="10"
-                            />
-                          </el-form-item>
-                        </el-form>
-                      </div>
-
-                      <div class="product-list">
-                        <div v-for="(product, index) in currentTemplateData.products"
-                             :key="index" class="product-item">
-                          <div class="product-image">
-                            <img :src="product.image || 'https://via.placeholder.com/60x60/3d4d6b/ffffff?text=Product'"
-                                 alt="">
-                          </div>
-                          <div class="product-info">
-                            <el-input v-model="product.name" placeholder="商品名称"/>
-                            <el-input-number
-                                v-model="product.price"
-                                :min="0"
-                                :step="1"
-                                placeholder="价格"
-                            />
-                            <el-input-number
-                                v-model="product.sales"
-                                :min="0"
-                                :step="1"
-                                placeholder="销量"
-                                @change="updateProductGmv(product)"
-                            />
-                          </div>
-                          <div class="product-stats">
-                            <div>成交金额: ¥{{ product.amount.toFixed(1) }}</div>
-                            <div>下单GMV: ¥{{ product.gmv.toFixed(1) }}</div>
-                          </div>
-                          <div class="product-actions">
-                            <a-button shape="circle" type="danger" @click="removeProductFromTemplate(index)">
-                              <icon-close/>
-                            </a-button>
-                          </div>
-                        </div>
+                      <div style="margin-top: 10px;">
+                        <el-form-item label="随机种子">
+                          <el-input-number
+                              v-model="formData.ecommerce.seed"
+                              :min="0"
+                              :step="1"
+                              placeholder="随机种子"
+                          />
+                        </el-form-item>
                       </div>
                     </div>
 
@@ -147,7 +93,7 @@
                   </div>
                 </el-dialog>
                 <div class="ob-box-online peple">
-                  {{ dataMode === 'ecommerce' ? dynamicData.ecommerce.gmv.toFixed(1) : dynamicData.general.viewers }}
+                  {{ dataMode === 'ecommerce' ? viewData.ecommerce.placeGMV.toFixed(1) : dynamicData.general.viewers }}
                 </div>
               </div>
               <div>
@@ -184,42 +130,42 @@
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name">销量</div>
-                    <div class="data-value">{{ dynamicData.ecommerce.sales }}</div>
+                    <div class="data-value">{{ viewData.ecommerce.salesNum }}</div>
                   </section>
                 </div>
                 <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name">成交人数</div>
-                    <div class="data-value">{{ dynamicData.ecommerce.buyers }}</div>
+                    <div class="data-value">{{ viewData.ecommerce.transactionPeople }}</div>
                   </section>
                 </div>
                 <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name">客单价(元)</div>
-                    <div class="data-value">￥{{ dynamicData.ecommerce.avgPrice.toFixed(1) }}</div>
+                    <div class="data-value">￥{{ viewData.ecommerce.unitPrice.toFixed(1) }}</div>
                   </section>
                 </div>
                 <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name">累计观看人数</div>
-                    <div class="data-value">{{ dynamicData.ecommerce.viewers }}</div>
+                    <div class="data-value">{{ viewData.ecommerce.lookPeoples }}</div>
                   </section>
                 </div>
                 <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name">成交转化率</div>
-                    <div class="data-value">{{ dynamicData.ecommerce.conversion.toFixed(2) }}%</div>
+                    <div class="data-value">{{ viewData.ecommerce.transactionRate }}%</div>
                   </section>
                 </div>
                 <div class="arco-col arco-col-lg-12 arco-col-xl-8 arco-col-xxl-6"
                      style="padding-top: 12px; padding-bottom: 12px;">
                   <section class="el-tooltip__trigger">
                     <div class="data-name" style="white-space: nowrap;">直播成交金额(元)</div>
-                    <div class="data-value">￥{{ dynamicData.ecommerce.liveSales.toFixed(1) }}</div>
+                    <div class="data-value">￥{{ viewData.ecommerce.transactionAmount }}</div>
                   </section>
                 </div>
               </template>
@@ -321,7 +267,7 @@
 
             <!-- 电商数据 - 商品销量榜 -->
             <div v-show="dataMode == 'ecommerce'" class="top-list">
-              <div v-for="(product, index) in productList" :key="index"
+              <div v-for="(product, index) in viewProductList" :key="index"
                    :class="['top-item', `top-item-${index}`]">
                 <i class="item-index">{{ index + 1 }}</i>
                 <div class="goods-info">
@@ -359,52 +305,124 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from 'vue';
 import * as echarts from 'echarts';
-import PageHead from "@/views/page-head.vue";
-import charArea from "@/views/char-area.vue";
-import LiveChatContainer from "@/views/live-chat-container.vue";
-import {IconClose} from '@arco-design/web-vue/es/icon';
+import PageHead from '@/views/page-head.vue';
+import charArea from '@/views/char-area.vue';
+import LiveChatContainer from '@/views/live-chat-container.vue';
+import {CustomData, DataGenerator} from "@/views/data.js"
+import Utils from '@/utils/tool.js';
+import {useMessage} from "@/hooks/useMessage.ts"
+import vc from '@/assets/vc.webp'
+import alb from '@/assets/澳洛彼清肺饮.jpg'
+import jyd from '@/assets/胶原蛋白肽.webp'
+import ysj from '@/assets/益生菌.webp'
+import xfs from '@/assets/xfs.jpg'
+import zpb from '@/assets/zpb.jpg'
+import trt from '@/assets/trt.jpg'
+import tgg from '@/assets/tgg.jpg'
 
 const active = ref('customer');
+const dataUpdateInterval = ref(null);
+const message = useMessage();
 const chartRef = ref(null);
 let chart = null;
 const productList = ref([
   {
-    name: '澳洛彼清肺饮【198元2盒】',
-    image: 'https://a2.vzan.com/live/1376262563/upload/image/jpg/20250410/78453b11bd094d898eacbdbc90ac3e1e.jpg',
-    price: 198.00,
-    sales: 25,
-    amount: 4950.0,
-    gmv: 6138.0
+    id: 1,
+    name: '澳洛彼清肺饮【298元2盒】',
+    image: alb,
+    price: 298, // 提高初始价格
+    sales: 0,
+    amount: 0,
+    gmv: 0,
   },
   {
+    id: 2,
     name: '胶原蛋白肽粉【298元3罐】',
-    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=Collagen',
-    price: 298.00,
-    sales: 18,
-    amount: 5364.0,
-    gmv: 6552.0
+    image: jyd,
+    price: 298,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
   },
   {
-    name: '益生菌固体饮料【158元1盒】',
-    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=Probiotics',
-    price: 158.00,
-    sales: 32,
-    amount: 5056.0,
-    gmv: 6320.0
+    id: 3,
+    name: '益生菌固体饮料【128元1盒】',
+    image: ysj,
+    price: 128,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
   },
   {
+    id: 4,
     name: '维生素C泡腾片【88元2盒】',
-    image: 'https://via.placeholder.com/80x80/3d4d6b/ffffff?text=VitaminC',
-    price: 88.00,
-    sales: 42,
-    amount: 3696.0,
-    gmv: 4620.0
+    image: vc,
+    price: 88,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+  }, {
+    id: 5,
+    name: '护本初医用洗发水【99元6瓶】',
+    image: xfs,
+    price: 99,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+  }, {
+    id: 6,
+    name: '真皮时尚百搭斜挎包【59.9元】',
+    image: zpb,
+    price: 59.9,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+  }, {
+    id: 7,
+    name: '医用退热贴【9.9元】',
+    image: trt,
+    price: 9.9,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+  }, {
+    id: 8,
+    name: '鸸鹋油透骨膏【99元/4瓶】',
+    image: tgg,
+    price: 99,
+    sales: 0,
+    amount: 0,
+    gmv: 0,
+  },
+]);
+// 弹窗中的表单数据
+const formData = ref({
+  ecommerce: {
+    gmv: 0,
+    seed: 123,
+    selectList: []
   }
-])
-const LivestreamingName = ref('直播间名称')
-const isLiveActive = ref(true) // 默认直播中
+})
+// 界面显示的数据
+const viewData = ref({
+  ecommerce: {
+    placeGMV: 0,// 下单GMV
+    salesNum: 0,// 销量
+    transactionPeople: 0,// 成交人数
+    transactionRate: 0,// 成交转化率
+    transactionAmount: 0,// 成交金额 （去掉退款金额）
+    unitPrice: 0,// 单价
+    lookPeoples: 0,// 观看人数
+  },
+  selectList: []
+})
+
+const viewProductList = ref([])
+
+const LivestreamingName = ref('直播间名称');
+const isLiveActive = ref(true); // 默认直播中
 // 数据模式状态
-const dataMode = ref('ecommerce') // 'general' 或 'ecommerce'
+const dataMode = ref('ecommerce'); // 'general' 或 'ecommerce'
 
 // 模拟动态数据
 const dynamicData = ref({
@@ -415,7 +433,7 @@ const dynamicData = ref({
     avgPrice: 124.0,
     viewers: 1337,
     conversion: 2.31,
-    liveSales: 5827.8
+    liveSales: 5827.8,
   },
   general: {
     viewers: 0,
@@ -428,53 +446,52 @@ const dynamicData = ref({
     rewarders: 0,
     signups: 0,
     checkins: 0,
-    redpacket: 0
-  }
-})
+    redpacket: 0,
+  },
+});
 
+// 表格多选回调
+const handleSelectionChange = (val) => {
+  formData.value.ecommerce.selectList = val;
+
+  // 当选择商品变化时，立即更新数据
+  // if (showTemplateDialog.value) {
+  //   applyCurrentTemplate();
+  // }
+};
 // 更新时间函数
 const updateTime = () => {
-  const now = new Date()
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
-  const seconds = String(now.getSeconds()).padStart(2, '0')
-  dynamicData.value.general.duration = `${hours}:${minutes}:${seconds}`
-}
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  dynamicData.value.general.duration = `${hours}:${minutes}:${seconds}`;
+};
 
 // 模拟数据更新
 const updateData = () => {
-  // 随机增量
-  const randomIncrement = (base, max) => base + Math.floor(Math.random() * max)
+  // 1. 处理基础数据
+  const processData = new CustomData().processData(viewData.value.ecommerce);
 
-  // 更新电商数据
-  dynamicData.value.ecommerce = {
-    gmv: randomIncrement(7000, 500),
-    sales: randomIncrement(45, 10),
-    buyers: randomIncrement(30, 5),
-    avgPrice: 120 + Math.random() * 10,
-    viewers: randomIncrement(1300, 50),
-    conversion: 2.0 + Math.random(),
-    liveSales: randomIncrement(5800, 300)
-  }
+  // 2. 格式化数据
+  Object.keys(processData).forEach(key => {
+    if (typeof processData[key] === 'number') {
+      if (key.includes('Amount') || key.includes('GMV') || key.includes('Price')) {
+        processData[key] = Math.round(processData[key] * 10) / 10;
+      } else {
+        processData[key] = Math.round(processData[key]);
+      }
+    }
+  });
 
-  // 更新通用数据
-  dynamicData.value.general = {
-    viewers: randomIncrement(500, 100),
-    comments: randomIncrement(80, 20),
-    commenters: randomIncrement(40, 10),
-    interactionRate: 5 + Math.random() * 3,
-    likes: randomIncrement(500, 200),
-    duration: dynamicData.value.general.duration,
-    rewards: randomIncrement(10, 5),
-    rewarders: randomIncrement(8, 3),
-    signups: randomIncrement(20, 5),
-    checkins: randomIncrement(15, 5),
-    redpacket: randomIncrement(100, 50)
-  }
-  //更新商品数据
-  updateProductData()
-  updateTime()
-}
+  // 3. 更新视图数据
+  Utils.copyForm(processData, viewData.value.ecommerce);
+
+  // 4. 同步更新商品数据
+  updateProductList();
+
+  updateTime();
+};
 // 预设模板数据
 const templates = ref({
   '5万': {
@@ -485,13 +502,13 @@ const templates = ref({
       avgPrice: 12.5,
       viewers: 3552,
       conversion: 14.5,
-      liveSales: 45000
+      liveSales: 45000,
     },
     products: [
       {name: '原浆纸', price: 12.5, sales: 1000, amount: 12500, gmv: 15000},
       {name: '运动鞋', price: 150, sales: 100, amount: 15000, gmv: 18000},
-      {name: '哈尔滨红肠', price: 30, sales: 500, amount: 15000, gmv: 18000}
-    ]
+      {name: '哈尔滨红肠', price: 30, sales: 500, amount: 15000, gmv: 18000},
+    ],
   },
   '10万': {
     ecommerce: {
@@ -501,14 +518,14 @@ const templates = ref({
       avgPrice: 13.59,
       viewers: 7104,
       conversion: 15.24,
-      liveSales: 90000
+      liveSales: 90000,
     },
     products: [
       {name: '原浆纸', price: 12.5, sales: 3000, amount: 37500, gmv: 45000},
       {name: '运动鞋', price: 150, sales: 200, amount: 30000, gmv: 36000},
       {name: '哈尔滨红肠', price: 30, sales: 1000, amount: 30000, gmv: 36000},
-      {name: '松花鸡腿', price: 25, sales: 500, amount: 12500, gmv: 15000}
-    ]
+      {name: '松花鸡腿', price: 25, sales: 500, amount: 12500, gmv: 15000},
+    ],
   },
   '20万': {
     ecommerce: {
@@ -518,36 +535,21 @@ const templates = ref({
       avgPrice: 13.59,
       viewers: 14208,
       conversion: 15.24,
-      liveSales: 180000
+      liveSales: 180000,
     },
     products: [
       {name: '原浆纸', price: 12.5, sales: 6000, amount: 75000, gmv: 90000},
       {name: '运动鞋', price: 150, sales: 400, amount: 60000, gmv: 72000},
       {name: '哈尔滨红肠', price: 30, sales: 2000, amount: 60000, gmv: 72000},
-      {name: '松花鸡腿', price: 25, sales: 1000, amount: 25000, gmv: 30000}
-    ]
-  }
-})
+      {name: '松花鸡腿', price: 25, sales: 1000, amount: 25000, gmv: 30000},
+    ],
+  },
+});
 
 // 当前模板名称
-const currentTemplate = ref('10万')
+const currentTemplate = ref('10万');
 // 是否显示模板选择弹窗
-const showTemplateDialog = ref(false)
-
-// 应用模板
-const applyTemplate = (templateName) => {
-  currentTemplate.value = templateName
-  const template = templates.value[templateName]
-
-  // 更新电商数据
-  dynamicData.value.ecommerce = {...template.ecommerce}
-
-  // 更新商品列表
-  productList.value = template.products.map(p => ({...p}))
-
-  showTemplateDialog.value = false
-}
-
+const showTemplateDialog = ref(false);
 
 // 生成随机但协调的渐变背景
 const generateRandomGradient = (index) => {
@@ -557,14 +559,14 @@ const generateRandomGradient = (index) => {
       hsla(${hue}, 80%, 60%, 0.5),
       hsla(${hue}, 80%, 70%, 0.41) 36%,
       hsla(${hue}, 80%, 80%, 0.1))`,
-    border: `1px solid hsla(${hue}, 80%, 65%, 0.3)`
-  }
-}
+    border: `1px solid hsla(${hue}, 80%, 65%, 0.3)`,
+  };
+};
 
 // 在添加商品时应用
 const addProduct = () => {
-  const newIndex = productList.value.length
-  const gradient = generateRandomGradient(newIndex)
+  const newIndex = productList.value.length;
+  const gradient = generateRandomGradient(newIndex);
 
   productList.value.push({
     name: '新商品',
@@ -575,143 +577,89 @@ const addProduct = () => {
     image: '',
     style: {
       background: gradient.background,
-      border: gradient.border
-    }
-  })
-}
-// 删除商品
-const removeProduct = (index) => {
-  productList.value.splice(index, 1)
-  updateProductTotals()
-}
-// 当前正在编辑的模板名称
-const editingTemplate = ref('')
-// 当前模板数据副本
-const currentTemplateData = ref(null)
-
-// 选择模板进行编辑
-const selectTemplate = (templateName) => {
-  editingTemplate.value = templateName
-  // 创建深拷贝
-  currentTemplateData.value = JSON.parse(JSON.stringify(templates.value[templateName]))
-}
-
-// 添加新模板
-const addNewTemplate = () => {
-  const newTemplateName = `模板${Object.keys(templates.value).length + 1}`
-  templates.value[newTemplateName] = {
-    ecommerce: {
-      gmv: 0,
-      sales: 0,
-      buyers: 0,
-      avgPrice: 0,
-      viewers: 0,
-      conversion: 0,
-      liveSales: 0
+      border: gradient.border,
     },
-    products: []
-  }
-  selectTemplate(newTemplateName)
-}
+  });
+};
 
-// 向模板添加商品
-const addProductToTemplate = () => {
-  currentTemplateData.value.products.push({
-    name: '新商品',
-    price: 0,
-    sales: 0,
-    amount: 0,
-    gmv: 0,
-    image: ''
-  })
-}
-
-// 从模板移除商品
-const removeProductFromTemplate = (index) => {
-  currentTemplateData.value.products.splice(index, 1)
-  updateTemplateStats()
-}
-
-// 更新商品GMV
-const updateProductGmv = (product) => {
-  product.amount = product.sales * product.price
-  product.gmv = product.amount * 1.2
-  updateTemplateStats()
-}
-
-// 更新模板统计数据
-const updateTemplateStats = () => {
-  const ecommerce = currentTemplateData.value.ecommerce
-  const products = currentTemplateData.value.products
-
-  // 计算总和
-  let totalSales = 0
-  let totalAmount = 0
-  let totalGmv = 0
-
-  products.forEach(product => {
-    product.amount = product.sales * product.price
-    product.gmv = product.amount * 1.2
-
-    totalSales += product.sales
-    totalAmount += product.amount
-    totalGmv += product.gmv
-  })
-
-  // 更新电商数据
-  ecommerce.sales = totalSales
-  ecommerce.liveSales = totalAmount
-  ecommerce.gmv = totalGmv
-  ecommerce.avgPrice = totalSales > 0 ? totalAmount / totalSales : 0
-  ecommerce.buyers = Math.floor(totalSales / 1.8) // 假设平均每人购买1.8件
-}
+// 当前正在编辑的模板名称
+const editingTemplate = ref('');
+// 当前模板数据副本
+const currentTemplateData = ref(null);
 
 // 应用当前编辑的模板
 const applyCurrentTemplate = () => {
-  if (editingTemplate.value && currentTemplateData.value) {
-    // 更新模板数据
-    templates.value[editingTemplate.value] = JSON.parse(JSON.stringify(currentTemplateData.value))
+  try {
+    // 1. 生成基础数据
+    const customData = new CustomData(
+        Math.round(formData.value.ecommerce.gmv),
+        formData.value.ecommerce.seed
+    );
+    let data = customData.getData();
 
-    // 应用模板
-    applyTemplate(editingTemplate.value)
+    // 2. 格式化数据
+    Object.keys(data).forEach(key => {
+      if (typeof data[key] === 'number') {
+        if (key.includes('Amount') || key.includes('GMV') || key.includes('Price')) {
+          data[key] = Math.round(data[key] * 10) / 10;
+        } else {
+          data[key] = Math.round(data[key]);
+        }
+      }
+    });
 
-    showTemplateDialog.value = false
+    // 3. 更新视图数据
+    Utils.copyForm(data, viewData.value.ecommerce);
+    viewData.value.selectList = formData.value.ecommerce.selectList;
+
+    // 4. 更新商品列表数据
+    updateProductList();
+
+    message.success('应用模板成功');
+    showTemplateDialog.value = false;
+  } catch (e) {
+    message.error('应用模板失败：' + e.message);
   }
-}
-// 更新商品数据时同步更新总量
-const updateProductData = () => {
-  // 计算商品总和
-  let totalSales = 0
-  let totalAmount = 0
-  let totalGmv = 0
+};
+const updateProductList = () => {
+  // 1. 生成商品数据
+  viewProductList.value = DataGenerator.generate(formData.value.ecommerce.selectList, {
+    placeGMV: viewData.value.ecommerce.placeGMV,
+    salesNum: viewData.value.ecommerce.salesNum,
+    transactionAmount: viewData.value.ecommerce.transactionAmount,
+  });
 
+  // 2. 更新商品价格（如果商品已存在）
   productList.value.forEach(product => {
-    // 随机增加销量 (0-3个)
-    const increment = Math.floor(Math.random() * 4)
-    product.sales += increment
-    // 计算金额增长
-    product.amount = product.sales * product.price
-    // GMV增长略高于实际金额 (约1.2倍)
-    product.gmv = product.amount * 1.2
+    const matchedProduct = viewProductList.value.find(p => p.id === product.id);
+    if (matchedProduct) {
+      product.price = matchedProduct.price || product.price;
+      product.sales = matchedProduct.sales || product.sales;
+      product.amount = matchedProduct.amount || product.amount;
+      product.gmv = matchedProduct.gmv || product.gmv;
+    }
+  });
 
-    totalSales += product.sales
-    totalAmount += product.amount
-    totalGmv += product.gmv
-  })
+  // 3. 确保商品数据格式正确
+  formatProductData();
+};
+const formatProductData = () => {
+  productList.value.forEach(product => {
+    // 金额保留1位小数
+    product.price = Math.round(product.price * 10) / 10;
+    product.amount = Math.round(product.amount * 10) / 10;
+    product.gmv = Math.round(product.gmv * 10) / 10;
 
-  // 更新电商数据
-  dynamicData.value.ecommerce = {
-    ...dynamicData.value.ecommerce,
-    sales: totalSales,
-    buyers: Math.floor(totalSales / 1.8), // 假设平均每人购买1.8件
-    avgPrice: totalAmount / totalSales,
-    liveSales: totalAmount,
-    gmv: totalGmv
-  }
+    // 销量为整数
+    product.sales = Math.round(product.sales);
 
-  // 按销量排序
-  productList.value.sort((a, b) => b.sales - a.sales)
-}
+    // 确保最小值
+    product.price = Math.max(0, product.price);
+    product.sales = Math.max(0, product.sales);
+    product.amount = Math.max(0, product.amount);
+    product.gmv = Math.max(0, product.gmv);
+  });
+};
 // 初始化图表
 const initChart = () => {
   if (!chartRef.value) return;
@@ -722,35 +670,35 @@ const initChart = () => {
       top: 30,
       left: 40,
       right: 40,
-      bottom: 30
+      bottom: 30,
     },
     xAxis: {
       type: 'category',
       data: ['12:00', '12:10', '12:20', '12:30', '12:40', '12:50', '13:00'],
       axisLine: {
         lineStyle: {
-          color: '#363c4a'
-        }
+          color: '#363c4a',
+        },
       },
       axisLabel: {
-        color: '#8c8c8c'
-      }
+        color: '#8c8c8c',
+      },
     },
     yAxis: {
       type: 'value',
       axisLine: {
         lineStyle: {
-          color: '#363c4a'
-        }
+          color: '#363c4a',
+        },
       },
       axisLabel: {
-        color: '#8c8c8c'
+        color: '#8c8c8c',
       },
       splitLine: {
         lineStyle: {
-          color: '#363c4a'
-        }
-      }
+          color: '#363c4a',
+        },
+      },
     },
     series: [{
       data: [1, 4, 3, 1, 1, 2, 3],
@@ -759,10 +707,10 @@ const initChart = () => {
       symbolSize: 8,
       lineStyle: {
         color: '#409EFF',
-        width: 2
+        width: 2,
       },
       itemStyle: {
-        color: '#409EFF'
+        color: '#409EFF',
       },
       areaStyle: {
         color: {
@@ -773,14 +721,14 @@ const initChart = () => {
           y2: 1,
           colorStops: [{
             offset: 0,
-            color: 'rgba(64,158,255,0.2)'
+            color: 'rgba(64,158,255,0.2)',
           }, {
             offset: 1,
-            color: 'rgba(64,158,255,0)'
-          }]
-        }
-      }
-    }]
+            color: 'rgba(64,158,255,0)',
+          }],
+        },
+      },
+    }],
   };
 
   chart.setOption(option);
@@ -795,13 +743,24 @@ const handleResize = () => {
 onMounted(() => {
   initChart();
   window.addEventListener('resize', handleResize);
-  updateTime()
-  setInterval(updateData, 5000) // 每5秒更新一次数据
+  updateTime();
+
+  // 初始化时应用默认模板
+  applyCurrentTemplate();
+
+  dataUpdateInterval.value = setInterval(updateData, 10000);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
-  chart?.dispose();
+  if (dataUpdateInterval.value) {
+    clearInterval(dataUpdateInterval.value);
+    dataUpdateInterval.value = null;
+  }
+  if (chart.value) {
+    chart.value.dispose();
+    chart.value = null;
+  }
 });
 </script>
 
